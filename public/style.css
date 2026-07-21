@@ -71,6 +71,9 @@ input:focus-visible {
   margin-bottom: 16px;
   text-align: center;
   font-weight: 700;
+}
+
+.winner.anim {
   animation: pop .4s ease;
 }
 
@@ -118,7 +121,7 @@ input:focus-visible {
   color: var(--dim);
 }
 
-.last.bust {
+.last.busted {
   color: var(--coral);
 }
 
@@ -334,7 +337,7 @@ input:focus-visible {
   font-size: 15px;
 }
 
-.bust {
+button.bust {
   flex: 1;
   background: var(--coral);
   color: var(--ink);

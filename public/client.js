@@ -4,6 +4,7 @@ let game = null;
 let entry = null; // {playerId, n:[], m:[], x2}
 let showHist = false;
 let confirmReset = false;
+let announcedWinner = null; // id of winner we've already animated
 
 const $app = document.getElementById('app');
 const $sync = document.getElementById('sync');
@@ -38,7 +39,13 @@ function render(){
   const ranked=[...players].sort((a,b)=>(totals[b.id]||0)-(totals[a.id]||0));
   const winner=ranked.find(p=>(totals[p.id]||0)>=TARGET);
   let h='';
-  if(winner) h+='<div class="winner">🏆 '+esc(winner.name)+' wins with '+totals[winner.id]+' points!</div>';
+  if(winner){
+    const fresh = announcedWinner !== winner.id;
+    announcedWinner = winner.id;
+    h+='<div class="winner'+(fresh?' anim':'')+'">🏆 '+esc(winner.name)+' wins with '+totals[winner.id]+' points!</div>';
+  } else {
+    announcedWinner = null;
+  }
   h+='<div class="board">';
   if(!ranked.length) h+='<p class="empty">No players yet — add everyone at the table below.</p>';
   ranked.forEach((p,i)=>{
@@ -46,7 +53,7 @@ function render(){
     h+='<div class="pcard"><div class="prow">'
       +'<span class="rank'+(i===0&&t>0?' lead':'')+'">'+(i+1)+'</span>'
       +'<span class="pname">'+esc(p.name)+'</span>'
-      +(lr?'<span class="last'+(lr.bust?' bust':'')+'">'+(lr.bust?'busted':'+'+lr.score)+(lr.n&&lr.n.length===7?' · FLIP 7!':'')+'</span>':'')
+      +(lr?'<span class="last'+(lr.bust?' busted':'')+'">'+(lr.bust?'busted':'+'+lr.score)+(lr.n&&lr.n.length===7?' · FLIP 7!':'')+'</span>':'')
       +'<span class="total">'+t+'</span></div>'
       +'<div class="barbg"><div class="bar'+(t>=TARGET?' won':'')+'" style="width:'+Math.min(100,t/TARGET*100)+'%"></div></div>'
       +'<div class="btnrow">'
