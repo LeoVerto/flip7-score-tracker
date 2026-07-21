@@ -139,4 +139,9 @@ function bind(){
 }
 
 refresh();
-setInterval(()=>{ if(!entry) refresh(); }, 4000);
+// refresh to reload scoreboard unless player is editing their name
+setInterval(()=>{
+  const pi = document.getElementById('pname');
+  const typingName = pi && (pi === document.activeElement || pi.value.trim());
+  if(!entry && !typingName) refresh();
+}, 4000);
