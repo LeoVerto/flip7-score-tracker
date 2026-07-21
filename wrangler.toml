@@ -1,0 +1,14 @@
+name = "flip7-score-tracker"
+main = "src/worker.js"
+compatibility_date = "2026-07-21"
+
+[assets]
+directory = "public"
+
+[[durable_objects.bindings]]
+name = "GAME"
+class_name = "GameDO"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["GameDO"]
