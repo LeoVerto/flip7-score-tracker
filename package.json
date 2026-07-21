@@ -2,7 +2,8 @@
   "name": "flip7-score-tracker",
   "private": true,
   "scripts": {
-    "dev": "wrangler dev",
+    "dev": "wrangler dev --env=''",
+    "stage": "wrangler dev --env=staging",
     "deploy": "wrangler deploy"
   },
   "devDependencies": {

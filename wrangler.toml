@@ -13,3 +13,14 @@ class_name = "GameDO"
 [[migrations]]
 tag = "v1"
 new_sqlite_classes = ["GameDO"]
+
+[env.staging]
+name = "flip7-tracker-staging"
+
+[env.staging.assets]
+directory = "public"
+binding = "ASSETS"
+
+[[env.staging.durable_objects.bindings]]
+name = "GAME"
+class_name = "GameDO"
