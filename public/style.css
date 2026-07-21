@@ -430,6 +430,56 @@ button.bust {
   color: var(--dim);
 }
 
+.roomtag {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  font-size: 13px;
+  color: var(--dim);
+}
+
+.roomtag b {
+  font-family: 'Titan One';
+  font-weight: 400;
+  font-size: 15px;
+  letter-spacing: 2px;
+  color: var(--paper);
+}
+
+.roomtag button {
+  background: none;
+  border: 1px solid rgba(255, 255, 255, .2);
+  color: var(--dim);
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 12px;
+}
+
+.landing {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 10px;
+}
+
+.landing .save {
+  padding: 14px 0;
+  font-size: 16px;
+}
+
+.landing .or {
+  text-align: center;
+  color: var(--dim);
+  font-size: 13px;
+  margin: 0;
+}
+
+.landing .addrow {
+  margin-bottom: 0;
+}
+
 @keyframes pop {
   0% {
     transform: scale(.85)

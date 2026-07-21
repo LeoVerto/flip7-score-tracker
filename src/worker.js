@@ -1,6 +1,10 @@
+import { sanitizeRound } from '../public/scoring.js';
+
 export class GameDO {
   constructor(state) {
     this.state = state;
+    // Answer keepalive pings without waking a hibernated object.
+    this.state.setWebSocketAutoResponse(new WebSocketRequestResponsePair('ping', 'pong'));
   }
 
   emptyGame() {
@@ -18,10 +22,23 @@ export class GameDO {
 
   async fetch(request) {
     const url = new URL(request.url);
-    if (request.method === 'GET' && url.pathname === '/api/state') {
+    const action = url.pathname.split('/').pop();
+
+    if (request.method === 'GET' && action === 'ws') {
+      if (request.headers.get('Upgrade') !== 'websocket') {
+        return new Response('expected websocket', { status: 426 });
+      }
+      const [client, server] = Object.values(new WebSocketPair());
+      this.state.acceptWebSocket(server);
+      server.send(JSON.stringify(await this.getGame()));
+      return new Response(null, { status: 101, webSocket: client });
+    }
+
+    if (request.method === 'GET' && action === 'state') {
       return Response.json(await this.getGame());
     }
-    if (request.method === 'POST' && url.pathname === '/api/op') {
+
+    if (request.method === 'POST' && action === 'op') {
       let op;
       try {
         op = await request.json();
@@ -32,9 +49,20 @@ export class GameDO {
       const err = this.apply(game, op);
       if (err) return new Response(err, { status: 400 });
       await this.state.storage.put('game', game);
+      this.broadcast(game);
       return Response.json(game);
     }
+
     return new Response('not found', { status: 404 });
+  }
+
+  broadcast(game) {
+    const payload = JSON.stringify(game);
+    for (const ws of this.state.getWebSockets()) {
+      try {
+        ws.send(payload);
+      } catch { /* socket already closing */ }
+    }
   }
 
   apply(game, op) {
@@ -54,15 +82,8 @@ export class GameDO {
       }
       case 'addRound': {
         if (!game.players[op.playerId]) return 'no such player';
-        const bust = !!op.bust;
-        const n = bust ? [] : uniqInts(op.n, 0, 12).slice(0, 7);
-        const m = bust ? [] : uniqInts(op.m, 2, 10).filter((v) => [2, 4, 6, 8, 10].includes(v));
-        const x2 = bust ? false : !!op.x2;
-        let base = n.reduce((s, v) => s + v, 0);
-        if (x2) base *= 2;
-        const score = bust ? 0 : base + m.reduce((s, v) => s + v, 0) + (n.length === 7 ? 15 : 0);
         const id = crypto.randomUUID();
-        game.rounds[id] = { id, playerId: op.playerId, score, n, m, x2, bust, ts: Date.now() };
+        game.rounds[id] = { id, playerId: op.playerId, ...sanitizeRound(op), ts: Date.now() };
         return null;
       }
       case 'voidRound': {
@@ -88,18 +109,20 @@ export class GameDO {
   }
 }
 
-function uniqInts(arr, min, max) {
-  if (!Array.isArray(arr)) return [];
-  return [...new Set(arr.map((v) => Number(v)).filter((v) => Number.isInteger(v) && v >= min && v <= max))];
-}
+const ROOM_RE = /^\/api\/g\/([A-Za-z0-9]{4,8})\/(state|op|ws)$/;
 
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
-    if (url.pathname.startsWith('/api/')) {
-      const id = env.GAME.idFromName('global');
+    const m = url.pathname.match(ROOM_RE);
+    if (m) {
+      const id = env.GAME.idFromName(m[1].toUpperCase());
       return env.GAME.get(id).fetch(request);
     }
-    return new Response('not found', { status: 404 });
+    if (url.pathname.startsWith('/api/')) {
+      return new Response('not found', { status: 404 });
+    }
+    // Any other non-asset path (e.g. /g/CODE) is a client route: serve the shell.
+    return env.ASSETS.fetch(new URL('/index.html', url));
   },
 };
