@@ -92,7 +92,7 @@ input:focus-visible {
 
 .prow {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 10px;
 }
 
@@ -117,7 +117,7 @@ input:focus-visible {
 }
 
 .last {
-  font-size: 12px;
+  font-size: 15px;
   color: var(--dim);
 }
 
